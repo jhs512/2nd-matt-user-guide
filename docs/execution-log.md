@@ -49,3 +49,21 @@ Railway 계정은 로그인됐지만 새 프로젝트 생성이 요금제 한도
 로컬 PostgreSQL 성공은 Railway 성공을 뜻하지 않습니다. GitHub Actions의 배포 job은 DEPLOY_ENABLED가 true이고 실제 설정을 준비한 후에만 실행됩니다.
 
 GitHub Actions 최초 실행은 PostgreSQL health-cmd의 작은따옴표가 runner 인자 처리에서 보존되어 실패했습니다. 큰따옴표로 수정했습니다. 로컬 명령을 CI YAML로 옮길 때도 실제 runner 실행을 확인해야 한다는 사례입니다.
+
+### 배포용 컨테이너도 실행 확인
+
+루트 Dockerfile로 `docker build -t second-matt-api:local .` 성공. 생성한 이미지를 일반 사용자 `app`으로 실행하고 별도 PostgreSQL 컨테이너에 연결했습니다. 포트8082에서 health, 버전 응답, 실제 CRUD 스모크가 통과했습니다. 이는 로컬 Docker 실행 증거이며 Railway 운영 배포 증거는 아닙니다.
+
+## GitHub Actions 최종 확인
+
+[검사 실행 33978349671](https://github.com/jhs512/2nd-matt-user-guide/actions/runs/33978349671), 구현 커밋 `69a43ac3ecc93d263b45bb9fd3c95f11b5b88bc1`에서 **verify 성공**, **deploy 건너뜀**을 확인했습니다. 실행 시간은 2분45초였습니다.
+
+- H2 메모리 HTTP 검사와 Spring 컨텍스트 검사: 통과.
+- TypeScript, lint, React 화면 테스트 3개, 프로덕션 빌드: 통과.
+- 실제 Chromium + H2 서버 공지사항 작업: 통과.
+- 별도 PostgreSQL 서비스 + prod 설정 + 실제 CRUD: 통과.
+- 검사 보고서와 화면은 Actions의 verification-evidence artifact에도 저장됩니다.
+
+Actions v4 계열에 대한 Node20/설정 액션 사용 중단 예정 경고가 있었지만 실행은 Node24에서 성공했습니다. 앱의 Node24 설정과 액션 자체의 내부 런타임은 별개입니다. 향후 액션 버전을 올리면 같은 검사로 다시 확인해야 합니다.
+
+이후 문서·티켓 완료 상태만 갱신한 커밋은 중복 실행을 피하려고 `[skip ci]`로 남겼습니다. 위 링크는 실제 코드를 검증한 실행을 가리킵니다.
