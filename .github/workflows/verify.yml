@@ -96,7 +96,7 @@ jobs:
       - name: Upload this exact checkout
         run: |
           test -n "$RAILWAY_TOKEN" && test -n "$RAILWAY_SERVICE_ID"
-          test -n "$VITE_API_BASE_URL" && test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$VITE_API_BASE_URL"
           railway variable set "APP_REVISION=$GITHUB_SHA" --service "$RAILWAY_SERVICE_ID" --skip-deploys
           railway up --ci --service "$RAILWAY_SERVICE_ID"
       - name: Verify deployed revision and database health
@@ -109,7 +109,10 @@ jobs:
           exit 1
       - run: npm ci && npm run build
         working-directory: frontend
-      - run: npx wrangler pages deploy dist --project-name "$CLOUDFLARE_PAGES_PROJECT" --branch main --commit-hash "$GITHUB_SHA"
+      - name: Deploy Pages frontend
+        if: vars.PAGES_DEPLOY_ENABLED == 'true'
+        run: npx wrangler pages deploy dist --project-name "$CLOUDFLARE_PAGES_PROJECT" --branch main --commit-hash "$GITHUB_SHA"
         working-directory: frontend
+
 
 
