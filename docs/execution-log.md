@@ -47,3 +47,5 @@
 Railway 계정은 로그인됐지만 새 프로젝트 생성이 요금제 한도로 거절됐습니다. 기존 프로젝트를 삭제하거나 요금제를 변경하지 않았습니다. 따라서 Railway 운영 PG·API 배포, 연결된 Pages 공개 사이트, 운영 자동배포는 미완료입니다. Cloudflare도 로컬 OAuth 로그인과 Actions용 API 토큰은 별개이며 저장소의 운영 Secrets는 아직 없습니다.
 
 로컬 PostgreSQL 성공은 Railway 성공을 뜻하지 않습니다. GitHub Actions의 배포 job은 DEPLOY_ENABLED가 true이고 실제 설정을 준비한 후에만 실행됩니다.
+
+GitHub Actions 최초 실행은 PostgreSQL health-cmd의 작은따옴표가 runner 인자 처리에서 보존되어 실패했습니다. 큰따옴표로 수정했습니다. 로컬 명령을 CI YAML로 옮길 때도 실제 runner 실행을 확인해야 한다는 사례입니다.

@@ -31,14 +31,16 @@ export default function App() {
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
   async function request(path: string, method = "GET", payload?: unknown) {
     const response = await fetch(`${api}${path}`, {
       method,
       headers: {
         "Content-Type": "application/json",
-        ...(token && method !== "GET" ? { Authorization: `Bearer ${token}` } : {}),
+        ...(token && method !== "GET"
+          ? { Authorization: `Bearer ${token}` }
+          : {}),
       },
       body: payload === undefined ? undefined : JSON.stringify(payload),
     });
@@ -61,8 +63,6 @@ export default function App() {
   useEffect(() => {
     if (view !== "list") return;
     const controller = new AbortController();
-    setLoading(true);
-    setError("");
     fetch(`${api}/api/notices?page=${page}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error("목록을 불러오지 못했습니다.");
@@ -92,6 +92,7 @@ export default function App() {
     }
   }
   function home() {
+    setLoading(true);
     setView("list");
     setError("");
     setRefresh((v) => v + 1);
@@ -127,7 +128,9 @@ export default function App() {
         <div className="flex gap-2">
           {token ? (
             <>
-              <Button disabled={busy} onClick={() => edit(null)}>새 공지</Button>
+              <Button disabled={busy} onClick={() => edit(null)}>
+                새 공지
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -215,7 +218,10 @@ export default function App() {
                   <Button
                     variant="outline"
                     disabled={page === 0}
-                    onClick={() => setPage((v) => v - 1)}
+                    onClick={() => {
+                      setLoading(true);
+                      setPage((v) => v - 1);
+                    }}
                   >
                     이전
                   </Button>
@@ -225,7 +231,10 @@ export default function App() {
                   <Button
                     variant="outline"
                     disabled={page + 1 >= data.totalPages}
-                    onClick={() => setPage((v) => v + 1)}
+                    onClick={() => {
+                      setLoading(true);
+                      setPage((v) => v + 1);
+                    }}
                   >
                     다음
                   </Button>
@@ -375,5 +384,3 @@ export default function App() {
     </main>
   );
 }
-
-
