@@ -35,7 +35,9 @@ data class NoticePage(val items: List<Notice>, val page: Int, val size: Int, val
 @RequestMapping("/api/notices")
 class NoticeController(private val notices: Notices) {
     @GetMapping fun list(@RequestParam(defaultValue = "0") page: Int): NoticePage {
-        if (page < 0 || page > 1_000_000) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 페이지입니다")
+        if (page < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 페이지입니다")
+        val total = notices.count()
+        if (page.toLong() * 10 >= total) return NoticePage(emptyList(), page, 10, total, ((total + 9) / 10).toInt())
         val result = notices.findAll(PageRequest.of(page, 10, Sort.by(Sort.Direction.DESC, "createdAt", "id")))
         return NoticePage(result.content, page, 10, result.totalElements, result.totalPages)
     }

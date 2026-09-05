@@ -38,7 +38,7 @@ export default function App() {
       method,
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(token && method !== "GET" ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: payload === undefined ? undefined : JSON.stringify(payload),
     });
@@ -127,7 +127,7 @@ export default function App() {
         <div className="flex gap-2">
           {token ? (
             <>
-              <Button onClick={() => edit(null)}>새 공지</Button>
+              <Button disabled={busy} onClick={() => edit(null)}>새 공지</Button>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -375,3 +375,5 @@ export default function App() {
     </main>
   );
 }
+
+

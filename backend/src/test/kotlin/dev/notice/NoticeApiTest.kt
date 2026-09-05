@@ -43,7 +43,7 @@ class NoticeApiTest {
    val newestId = first.get("items").get(0).get("id")
    assertEquals(200, req("PUT", paths.first(), payload("edited oldest", "body"), token).statusCode())
    assertEquals(newestId, json.readTree(req("GET", "/api/notices").body()).get("items").get(0).get("id"))
-   assertEquals(0, json.readTree(req("GET", "/api/notices?page=9999").body()).get("items").size())
+   assertEquals(0, json.readTree(req("GET", "/api/notices?page=1000001").body()).get("items").size())
   } finally { paths.forEach { req("DELETE", it, token = token) } }
  }
  @LocalServerPort var port: Int = 0
@@ -91,5 +91,6 @@ class NoticeApiTest {
   assertEquals(404, req("GET", path).statusCode())
  }
 }
+
 
 
