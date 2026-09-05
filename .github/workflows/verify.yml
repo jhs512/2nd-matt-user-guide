@@ -43,9 +43,9 @@ jobs:
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
-      - name: Start local H2 server
+      - name: Start isolated H2 memory server for browser tests
         run: |
-          SPRING_PROFILES_ACTIVE=local java -jar backend/build/libs/*-SNAPSHOT.jar > h2-server.log 2>&1 &
+          SPRING_PROFILES_ACTIVE=local SPRING_DATASOURCE_URL='jdbc:h2:mem:e2e;DB_CLOSE_DELAY=-1' java -jar backend/build/libs/*-SNAPSHOT.jar > h2-server.log 2>&1 &
           for i in {1..60}; do curl -fsS http://localhost:8080/actuator/health && exit 0; sleep 2; done
           cat h2-server.log; exit 1
       - run: npm run test:e2e
