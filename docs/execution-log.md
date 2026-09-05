@@ -67,3 +67,11 @@ GitHub Actions 최초 실행은 PostgreSQL health-cmd의 작은따옴표가 runn
 Actions v4 계열에 대한 Node20/설정 액션 사용 중단 예정 경고가 있었지만 실행은 Node24에서 성공했습니다. 앱의 Node24 설정과 액션 자체의 내부 런타임은 별개입니다. 향후 액션 버전을 올리면 같은 검사로 다시 확인해야 합니다.
 
 이후 문서·티켓 완료 상태만 갱신한 커밋은 중복 실행을 피하려고 `[skip ci]`로 남겼습니다. 위 링크는 실제 코드를 검증한 실행을 가리킵니다.
+
+## 운영 배포 후속 결과
+
+사용자가 Hobby 전환을 완료한 뒤 새 Railway 프로젝트와 PostgreSQL 생성에 성공했습니다. 첫 배포는 로컬 CLI로 수행했으며, 운영 health와 실제 CRUD, Cloudflare Pages 공개 브라우저에서 로그인·등록·수정·삭제·새로고침 로그아웃이 통과했습니다. [현재 운영 배포 상태](production-status.md)에 URL과 남은 자동배포 설정을 별도로 기록합니다. 위의 한도 오류는 최초 시도의 기록입니다.
+
+## 매뉴얼 재점검: CI 브라우저 DB
+
+CI 브라우저 테스트 서버가 local 프로필의 H2 파일 DB를 사용하던 것을 발견했습니다. f1fdbf5에서 SPRING_DATASOURCE_URL을 H2 메모리 주소로 지정해 요구사항과 맞췄습니다. [재검증 실행](https://github.com/jhs512/2nd-matt-user-guide/actions/runs/33979364062)의 verify 단계에서 H2 메모리 브라우저 테스트와 PostgreSQL CRUD가 통과했습니다.

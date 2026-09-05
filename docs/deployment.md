@@ -1,6 +1,6 @@
 # 배포 설정과 남은 작업
 
-현재 **운영 배포 전**입니다. Railway 프로젝트 생성에서 무료 요금제 한도 오류를 확인했습니다. Cloudflare 로컬 로그인은 확인했지만 Actions API 토큰은 등록되지 않았습니다. 기존 서비스를 삭제하거나 결제 설정을 바꾸지 않았습니다.
+최초에는 Railway 무료 요금제 한도로 막혔으나, 사용자가 Hobby로 업그레이드한 뒤 **Railway API·PostgreSQL과 Cloudflare Pages 첫 공개 배포를 완료했습니다.** [현재 상태와 공개 URL](production-status.md)을 참고하세요. 아래는 재현과 설정 설명입니다. Pages 자동배포용 API 토큰은 아직 등록되지 않았습니다.
 
 ## 준비된 파일
 
@@ -17,7 +17,7 @@
 4. api 공개 도메인을 발급하고 Pages 프로젝트를 Direct Upload 방식으로 준비한다. 별도 Git 자동배포는 켜지 않는다.
 5. GitHub production 환경 Secrets에 RAILWAY_TOKEN(해당 프로젝트·환경 토큰), CLOUDFLARE_API_TOKEN(Pages 편집 권한)을 등록한다.
 6. GitHub Variables에 RAILWAY_SERVICE_ID, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_PAGES_PROJECT, VITE_API_BASE_URL을 등록한다.
-7. 위 설정을 준비한 뒤 DEPLOY_ENABLED=true로 설정하고 workflow_dispatch를 실행한다.
+7. 위 설정을 준비한 뒤 DEPLOY_ENABLED=true로 Railway 배포를 켠다. Cloudflare 토큰을 등록한 뒤 PAGES_DEPLOY_ENABLED=true도 설정하고 workflow_dispatch를 실행한다.
 8. /api/version의 SHA, health, Pages URL, 실제 관리자 로그인과 PG CRUD를 확인하고 05 티켓을 완료한다.
 
 로컬 예제의 비밀번호·해시는 공개된 실습 전용입니다. 운영에서 재사용하지 않습니다. 비밀번호를 채팅이나 저장소에 붙여 넣지 않고 환경변수/Secrets에 넣습니다.
