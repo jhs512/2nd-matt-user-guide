@@ -1,0 +1,114 @@
+name: Verify and deploy
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: notice
+          POSTGRES_USER: notice
+          POSTGRES_PASSWORD: local-pg-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U notice'
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD_HASH: '$2a$10$6PFSYhQab4sdL7ygBUkcsuwBJCp1R9Jiber6U38JnqBUJi/8sVdvS'
+      JWT_SECRET: local-only-not-for-production-secret-0123456789
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: chmod +x backend/gradlew && backend/gradlew -p backend test bootJar
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run typecheck && npm run lint && npm test && npm run build
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Start local H2 server
+        run: |
+          SPRING_PROFILES_ACTIVE=local java -jar backend/build/libs/*-SNAPSHOT.jar > h2-server.log 2>&1 &
+          for i in {1..60}; do curl -fsS http://localhost:8080/actuator/health && exit 0; sleep 2; done
+          cat h2-server.log; exit 1
+      - run: npm run test:e2e
+        working-directory: frontend
+      - name: Verify actual PostgreSQL using prod profile
+        env:
+          SPRING_PROFILES_ACTIVE: prod
+          PORT: '8081'
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/notice
+          SPRING_DATASOURCE_USERNAME: notice
+          SPRING_DATASOURCE_PASSWORD: local-pg-only
+        run: |
+          java -jar backend/build/libs/*-SNAPSHOT.jar > pg-server.log 2>&1 &
+          ready=false
+          for i in {1..60}; do if curl -fsS http://localhost:8081/actuator/health; then ready=true; break; fi; sleep 2; done
+          if [ "$ready" != true ]; then cat pg-server.log; exit 1; fi
+          node scripts/smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-evidence
+          path: |
+            backend/build/reports/tests
+            frontend/test-results
+            docs/evidence
+            *-server.log
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      RAILWAY_SERVICE_ID: ${{ vars.RAILWAY_SERVICE_ID }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --global @railway/cli@5.30.4
+      - name: Upload this exact checkout
+        run: |
+          test -n "$RAILWAY_TOKEN" && test -n "$RAILWAY_SERVICE_ID"
+          test -n "$VITE_API_BASE_URL" && test -n "$CLOUDFLARE_API_TOKEN"
+          railway variable set "APP_REVISION=$GITHUB_SHA" --service "$RAILWAY_SERVICE_ID" --skip-deploys
+          railway up --ci --service "$RAILWAY_SERVICE_ID"
+      - name: Verify deployed revision and database health
+        run: |
+          for i in {1..90}; do
+            revision=$(curl -fsS "$VITE_API_BASE_URL/api/version" | jq -r .revision || true)
+            if [ "$revision" = "$GITHUB_SHA" ] && curl -fsS "$VITE_API_BASE_URL/actuator/health"; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - run: npm ci && npm run build
+        working-directory: frontend
+      - run: npx wrangler pages deploy dist --project-name "$CLOUDFLARE_PAGES_PROJECT" --branch main --commit-hash "$GITHUB_SHA"
+        working-directory: frontend
+
