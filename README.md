@@ -59,6 +59,20 @@ E2E를 실행할 때는 위의 로컬 백엔드가 실행 중이어야 합니다
 
 [GitHub Actions 실행 결과](https://github.com/jhs512/2nd-matt-user-guide/actions)에서는 H2 검사와 별도로 PostgreSQL 서비스를 띄워 prod 설정과 CRUD도 확인합니다. Railway 배포가 활성화돼 있으며 Pages 업로드 단계는 전용 토큰 설정이 완료될 때까지 건너뜁니다.
 
+## AGENTS.md와 CLAUDE.md
+
+두 파일은 AI에게 프로젝트의 작업 규칙을 알려주는 안내문입니다. 프로젝트 최상위 폴더에 두고, 먼저 읽을 문서와 코드 작성·검사 방법을 적습니다.
+
+| 사용하는 도구 | 준비할 지침 파일 |
+| --- | --- |
+| Codex와 Claude Code 둘 다 | **AGENTS.md와 CLAUDE.md 둘 다 사용** |
+| Codex만 사용 | AGENTS.md만 있어도 됩니다 |
+| Claude Code만 사용 | CLAUDE.md만 있어도 됩니다 |
+
+두 도구를 함께 쓸 때는 공통 규칙을 AGENTS.md에 두고, CLAUDE.md에서 그 파일을 읽도록 안내하면 같은 규칙을 두 번 관리하지 않아도 됩니다. 이 예제에 있는 AGENTS.md를 기준으로 Claude Code도 사용할 때 CLAUDE.md를 함께 준비하세요.
+
+> **쉬운 비유:** 같은 작업실에 들어오는 두 사람에게 각자 알아보는 이름의 안내문을 주되, 실제 작업 규칙은 하나로 맞추는 것입니다.
+
 ## 진행 기록과 설계
 
 - [단계별 학습 결과](docs/execution-log.md)
